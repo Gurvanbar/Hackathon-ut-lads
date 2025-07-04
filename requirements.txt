@@ -1,0 +1,10 @@
+ollama
+groq
+python-dotenv
+sounddevice
+wavio
+numpy
+keyboard
+pyperclip
+requests
+Pillow

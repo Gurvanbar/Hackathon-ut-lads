@@ -44,3 +44,5 @@ if __name__ == "__main__":
     result = ask_qwen_about_sender("screenshot_email.png")
     if result:
         print(result)
+    else :
+        print("non")

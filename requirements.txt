@@ -8,3 +8,4 @@ keyboard
 pyperclip
 requests
 Pillow
+screeninfo

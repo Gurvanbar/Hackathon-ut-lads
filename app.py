@@ -6,6 +6,7 @@ import screeninfo
 from moteur import generate_mail, detect_audio_and_process
 import pyperclip
 import keyboard
+from directory import load_directory, add_person, delete_person
 
 USER_DATA_FILE = "user_data.json"
 
@@ -151,6 +152,64 @@ def prompt_window(overlay, user):
 
 #####
 
+def open_directory_window():
+    directory = load_directory()
+    win = tk.Toplevel()
+    win.title("People Directory")
+    win.geometry("400x400")
+
+    def refresh():
+        win.destroy()
+        open_directory_window()
+
+    for person in directory:
+        frame = tk.Frame(win, bd=1, relief="solid", padx=5, pady=5)
+        frame.pack(fill="x", padx=5, pady=5)
+
+        info = f"{person['name']} – {person['position']}\n{person['description']}"
+        tk.Label(frame, text=info, justify="left", anchor="w").pack(side="left", fill="x", expand=True)
+
+        def delete_callback(p=person['name']):
+            if messagebox.askyesno("Confirm Delete", f"Delete {p}?"):
+                delete_person(p)
+                refresh()
+
+        tk.Button(frame, text="Delete", fg="red", command=delete_callback).pack(side="right")
+
+    def add_new():
+        win.destroy()
+        add_person_form(None)  # Use root as parent for cleaner restart
+
+    tk.Button(win, text="Add Person", command=add_new).pack(pady=10)
+
+def add_person_form(parent):
+    form = tk.Toplevel(parent)
+    form.title("Add Person")
+    form.geometry("300x250")
+
+    name_var = tk.StringVar()
+    pos_var = tk.StringVar()
+    desc_var = tk.StringVar()
+
+    tk.Label(form, text="Name:").pack()
+    tk.Entry(form, textvariable=name_var).pack()
+
+    tk.Label(form, text="Position:").pack()
+    tk.Entry(form, textvariable=pos_var).pack()
+
+    tk.Label(form, text="Description:").pack()
+    tk.Entry(form, textvariable=desc_var).pack()
+
+    def submit():
+        add_person(name_var.get(), pos_var.get(), desc_var.get())
+        form.destroy()
+        parent.destroy()
+        open_directory_window()  # Refresh view
+
+    tk.Button(form, text="Save", command=submit).pack(pady=10)
+
+
+
 def show_main_window(user):
     root = tk.Tk()
     root.title("Welcome Back")
@@ -170,7 +229,9 @@ def show_main_window(user):
         root.destroy()
         launch_overlay_app(user)
 
-    tk.Button(root, text="Change Profile", command=reset_profile).pack(pady=10)
+
+    tk.Button(root, text="Open Directory", command=open_directory_window).pack(pady=5)
+    tk.Button(root, text="Edit Profile", command=reset_profile).pack(pady=10)
     tk.Button(root, text="Start App", command=start_app).pack()
 
     root.mainloop()

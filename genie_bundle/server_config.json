@@ -1,0 +1,25 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "title": "Genie OpenAI Compatible API",
+    "version": "1.0.0"
+  },
+  "genie": {
+    "executable": "genie-t2t-run.exe",
+    "config": "genie_config.json",
+    "default_model": "genie-llama-3.2-3b",
+    "initialization_timeout": 2.0
+  },
+  "api": {
+    "default_temperature": 0.8,
+    "default_max_tokens": 1024,
+    "default_top_p": 0.95,
+    "default_top_k": 40,
+    "enable_streaming": false
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

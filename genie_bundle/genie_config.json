@@ -18,7 +18,7 @@
         },
         "tokenizer": {
             "version": 1,
-            "path": "tokenizer.json"
+            "path": "./tokenizer.json"
         },
         "engine": {
             "version": 1,
@@ -36,7 +36,7 @@
                     "kv-dim": 128,
                     "allow-async-init": false
                 },
-                "extensions": "htp_backend_ext_config.json"
+                "extensions": "./htp_backend_ext_config.json"
             },
             "model": {
                 "version": 1,

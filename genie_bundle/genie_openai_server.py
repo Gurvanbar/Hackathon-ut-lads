@@ -4,124 +4,24 @@ OpenAI-compatible API server for Genie LLM.
 This script creates a FastAPI server that provides OpenAI-compatible endpoints
 for the Genie model running locally.
 """
-
+from models import *
 import json
 import os
-import subprocess
+
 import threading
-import time
 import uuid
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List
 import tempfile
 import asyncio
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 import uvicorn
 
-# Pydantic models for OpenAI API compatibility
-class ChatMessage(BaseModel):
-    role: str
-    content: str
 
-class ChatCompletionRequest(BaseModel):
-    model: str = "genie-llama-3.2-3b"
-    messages: List[ChatMessage]
-    temperature: Optional[float] = 0.8
-    max_tokens: Optional[int] = 1024
-    top_p: Optional[float] = 0.95
-    top_k: Optional[int] = 40
-    stream: Optional[bool] = False
-    stop: Optional[List[str]] = None
 
-class ChatCompletionResponse(BaseModel):
-    id: str
-    object: str = "chat.completion"
-    created: int
-    model: str
-    choices: List[Dict[str, Any]]
-    usage: Optional[Dict[str, int]] = None
 
-class Model(BaseModel):
-    id: str
-    object: str = "model"
-    created: int
-    owned_by: str = "genie"
-
-class GenieClient:
-    """Client to interact with the Genie executable"""
-    
-    def __init__(self, genie_path: str, config_path: str):
-        self.genie_path = genie_path
-        self.config_path = config_path
-        self.process = None
-        
-    def start_process(self):
-        """Start the Genie process if not already running"""
-        if self.process is None or self.process.poll() is not None:
-            try:
-                self.process = subprocess.Popen(
-                    [self.genie_path, "-c", self.config_path],
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True
-                )
-                # Give the process time to initialize
-                time.sleep(2)
-            except Exception as e:
-                raise RuntimeError(f"Failed to start Genie process: {e}")
-    
-    def generate_response(self, messages: List[ChatMessage], **kwargs) -> str:
-        """Generate a response using the Genie model"""
-        self.start_process()
-        
-        # Convert messages to a prompt format
-        prompt = self._messages_to_prompt(messages)
-        
-        try:
-            # Send the prompt to the process
-            self.process.stdin.write(prompt + "\n")
-            self.process.stdin.flush()
-            
-            # Read the response
-            response_lines = []
-            while True:
-                line = self.process.stdout.readline()
-                if not line or line.strip() == "":
-                    break
-                response_lines.append(line.strip())
-                
-            response = "\n".join(response_lines)
-            return response.strip()
-            
-        except Exception as e:
-            raise RuntimeError(f"Error generating response: {e}")
-    
-    def _messages_to_prompt(self, messages: List[ChatMessage]) -> str:
-        """Convert OpenAI messages format to a single prompt"""
-        prompt_parts = []
-        
-        for message in messages:
-            if message.role == "system":
-                prompt_parts.append(f"System: {message.content}")
-            elif message.role == "user":
-                prompt_parts.append(f"User: {message.content}")
-            elif message.role == "assistant":
-                prompt_parts.append(f"Assistant: {message.content}")
-        
-        prompt_parts.append("Assistant:")
-        return "\n".join(prompt_parts)
-    
-    def close(self):
-        """Close the Genie process"""
-        if self.process:
-            self.process.terminate()
-            self.process.wait()
 
 # Initialize FastAPI app
 app = FastAPI(title="Genie OpenAI Compatible API", version="1.0.0")

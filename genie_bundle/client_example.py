@@ -8,7 +8,7 @@ import json
 import requests
 from typing import List, Dict
 
-class GenieClient:
+class GenieOpenAIClient:
     """Simple client for the Genie OpenAI-compatible API"""
     
     def __init__(self, base_url: str = "http://127.0.0.1:8000"):
@@ -46,7 +46,7 @@ def example_with_requests():
     """Example using raw requests"""
     print("=== Testing with raw requests ===")
     
-    client = GenieClient()
+    client = GenieOpenAIClient()
     
     # Health check
     try:
@@ -115,7 +115,7 @@ def interactive_chat():
     """Interactive chat session"""
     print("\n=== Interactive Chat (type 'quit' to exit) ===")
     
-    client = GenieClient()
+    client = GenieOpenAIClient()
     messages = []
     
     while True:
@@ -144,10 +144,10 @@ def main():
     print("==========================================")
     
     # Test with raw requests
-    example_with_requests()
+    # example_with_requests()
     
     # Test with OpenAI library
-    example_with_openai_library()
+    # example_with_openai_library()
     
     # Interactive chat
     try:

@@ -166,21 +166,28 @@ def open_directory_window():
         frame = tk.Frame(win, bd=1, relief="solid", padx=5, pady=5)
         frame.pack(fill="x", padx=5, pady=5)
 
+        # Créer une sous-frame pour contrôler largeur du texte
+        content_frame = tk.Frame(frame)
+        content_frame.pack(side="left", fill="x", expand=True)
+
         info = f"{person['name']} – {person['position']}\n{person['description']}"
-        tk.Label(frame, text=info, justify="left", anchor="w").pack(side="left", fill="x", expand=True)
+        # wraplength = max width before wrapping
+        tk.Label(content_frame, text=info, justify="left", anchor="w", wraplength=280).pack(anchor="w")
 
         def delete_callback(p=person['name']):
             if messagebox.askyesno("Confirm Delete", f"Delete {p}?"):
                 delete_person(p)
                 refresh()
 
-        tk.Button(frame, text="Delete", fg="red", command=delete_callback).pack(side="right")
+        # Bouton delete visible à droite
+        tk.Button(frame, text="Delete", fg="red", command=delete_callback).pack(side="right", padx=5)
 
     def add_new():
         win.destroy()
-        add_person_form(None)  # Use root as parent for cleaner restart
+        add_person_form(None)
 
     tk.Button(win, text="Add Person", command=add_new).pack(pady=10)
+
 
 def add_person_form(parent):
     form = tk.Toplevel(parent)
@@ -203,7 +210,6 @@ def add_person_form(parent):
     def submit():
         add_person(name_var.get(), pos_var.get(), desc_var.get())
         form.destroy()
-        parent.destroy()
         open_directory_window()  # Refresh view
 
     tk.Button(form, text="Save", command=submit).pack(pady=10)

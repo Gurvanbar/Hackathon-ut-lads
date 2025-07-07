@@ -11,3 +11,6 @@ Pillow
 screeninfo
 fastapi
 uvicorn
+pydantic
+python-multipart
+openai

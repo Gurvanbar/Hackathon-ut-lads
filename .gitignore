@@ -2,3 +2,7 @@ venv
 venvLinux
 .env
 recording1.wav
+*.bin
+genie_bundle\llama_v3_2_3b_instruct_part_1_of_3.bin
+genie_bundle\llama_v3_2_3b_instruct_part_2_of_3.bin
+genie_bundle\llama_v3_2_3b_instruct_part_3_of_3.bin

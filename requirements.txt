@@ -9,3 +9,5 @@ pyperclip
 requests
 Pillow
 screeninfo
+fastapi
+uvicorn

@@ -1,0 +1,58 @@
+{
+  "providers": {
+    "ollama": {
+      "model": "llama3.2:3b",
+      "options": {
+        "temperature": 0.3,
+        "format": "json"
+      }
+    },
+    "genie": {
+      "base_url": "http://127.0.0.1:8000/v1",
+      "api_key": "dummy-key",
+      "model": "genie-llama-3.2-3b",
+      "temperature": 0.3,
+      "max_tokens": 1024,
+      "top_p": 0.95
+    },
+    "anythingllm": {
+      "base_url": "http://localhost:3001/v1",
+      "api_key": "0HXTV3T-29H4T34-KK9CVYV-QG6AYDJ",
+      "model": "1",
+      "temperature": 0.3,
+      "max_tokens": 1024,
+      "top_p": 0.95
+    },
+    "groq": {
+      "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "temperature": 0.3,
+      "max_completion_tokens": 1024,
+      "top_p": 1,
+      "stream": false,
+      "response_format": {
+        "type": "json_object"
+      },
+      "stop": null
+    }
+  },
+  "audio": {
+    "frequency": 44100,
+    "channels": 1,
+    "chunk_duration": 0.1,
+    "output_file": "recording1.wav",
+    "sample_width": 2
+  },
+  "transcription": {
+    "model": "whisper-large-v3-turbo",
+    "language": "en",
+    "response_format": "verbose_json"
+  },
+  "mail_generation": {
+    "default_provider": "ollama",
+    "system_prompt": "Create a professional looking mail for the user. Just answer the mail in JSON with the format: { \"mail\": \"This is a mail\" }"
+  },
+  "user_data_file": "user_data.json",
+  "keybindings": {
+    "recording_keys": ["space"]
+  }
+}

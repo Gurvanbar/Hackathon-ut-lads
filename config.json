@@ -49,7 +49,7 @@
   },
   "mail_generation": {
     "default_provider": "ollama",
-    "system_prompt": "Create a professional looking mail for the user. Just answer the mail in JSON with the format: { \"mail\": \"This is a mail\" }"
+    "system_prompt": "I'm {sender_name} and I'm a {sender_profession}. I received an email : {email_received}. I want to respond : {i_want_to_respond} but make it professionnal."
   },
   "user_data_file": "user_data.json",
   "keybindings": {

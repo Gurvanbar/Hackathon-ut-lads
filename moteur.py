@@ -22,7 +22,8 @@ def load_config():
 config = load_config() 
 
 def generate_mail(
-    content: str,
+    email_received: str,
+    i_want_to_respond: str,
     provider: Literal["groq", "ollama", "anythingllm", "genie"] = None
 ):
     # Use default provider from config if none specified
@@ -40,15 +41,11 @@ def generate_mail(
     messages = [
         {
             "role": "system",
-            "content": config["mail_generation"]["system_prompt"]
+            "content": config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond)
         },
         {
             "role": "user",
-            "content": (
-                f"{content}\n"
-                f"user_name: {sender_name}\n"
-                f"user_profession: {sender_profession}"
-            )
+            "content": "Just answer the mail in JSON with the format: { \"mail\": \"This is a mail\" }"
         }
     ]
 
@@ -70,10 +67,8 @@ def generate_mail(
     except json.JSONDecodeError:
         return result
 
-def detect_audio_and_process(keys_to_press=None, provider=None):
-    # Use default keys from config if none specified
-    if keys_to_press is None:
-        keys_to_press = config["keybindings"]["recording_keys"]
+def detect_audio_and_process(provider=None):
+    keys_to_press = config["keybindings"]["recording_keys"]
     
     # Audio parameters from config
     audio_config = config["audio"]
@@ -119,8 +114,7 @@ def detect_audio_and_process(keys_to_press=None, provider=None):
             response_format=transcription_config["response_format"],
         )
     print(transcription.text)
-    result = generate_mail(transcription.text, provider=provider)
-    pyperclip.copy(result)
+    return transcription.text
 
 
 

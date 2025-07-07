@@ -45,14 +45,7 @@ def launch_overlay_app(app):
     # Click handler for main circle
     def on_click(event=None):
         overlay.withdraw()
-        # Check clipboard mode setting from app
-        if hasattr(app, 'clipboard_mode') and app.clipboard_mode:
-            # Auto clipboard mode - process clipboard content directly
-            process_clipboard_mode(overlay, app)
-        else:
-            # Manual mode - open prompt window
-            prompt_window(overlay, app)
-
+        app.handle_email()
     canvas.tag_bind(circle, "<Button-1>", on_click)
 
     # Dragging logic bound to the arrow button
@@ -79,56 +72,3 @@ def launch_overlay_app(app):
 
     overlay.mainloop()
     return overlay
-
-def prompt_window(overlay, app):
-    """Create the prompt window for mail generation"""
-    prompt = tk.Toplevel()
-    prompt.title("Prompt")
-    prompt.geometry(PROMPT_WINDOW_SIZE)
-    prompt.attributes("-topmost", True)
-
-    tk.Label(prompt, text=f"{app.user['name']}, enter your mail prompt:", font=("Arial", 12)).pack(pady=10)
-    entry = tk.Entry(prompt, width=40)
-    entry.pack(pady=5)
-
-    def submit():
-        user_input = entry.get()
-        response = generate_mail(user_input)
-        prompt.destroy()
-        overlay.deiconify()
-        messagebox.showinfo("Success", "The mail has been generated")
-        print(response)
-        pyperclip.copy(response)
-
-    tk.Button(prompt, text="Submit", command=submit).pack(pady=10)
-
-    def on_close():
-        overlay.deiconify()
-        prompt.destroy()
-
-    prompt.protocol("WM_DELETE_WINDOW", on_close)
-
-
-def process_clipboard_mode(overlay, app):
-    """Process clipboard content in auto mode"""
-    try:
-        clipboard_content = pyperclip.paste()
-        if not clipboard_content.strip():
-            # Show a simple error and return to overlay
-            messagebox.showwarning("Empty Clipboard", "No content found in clipboard!")
-            overlay.deiconify()
-            return
-        
-        # Generate email response
-        response = generate_mail(clipboard_content)
-        
-        # Copy result back to clipboard
-        pyperclip.copy(response)
-        
-        # Show success message
-        messagebox.showinfo("Success", "Email response generated and copied to clipboard!")
-        overlay.deiconify()
-        
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to process clipboard content: {str(e)}")
-        overlay.deiconify()

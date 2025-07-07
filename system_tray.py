@@ -2,6 +2,7 @@ import json
 import os
 import tkinter as tk
 from tkinter import messagebox
+import pyautogui
 import pystray
 from PIL import Image, ImageDraw
 import threading
@@ -72,15 +73,35 @@ class SystemTrayApp:
         """Minimize the application to system tray"""
         if self.main_window:
             self.main_window.withdraw()
+    
+    def handle_email(self):
+        """Handle email processing"""
+        if self.clipboard_mode == True:
+            # Auto-read from clipboard
+            content = self.copy_selected_content()
+            if content is None:
+                messagebox.showwarning("Empty Clipboard", "No content found in clipboard!")
+                return
+            text = detect_audio_and_process(provider=self.selected_provider)
+            if text is None:
+                messagebox.showerror("Error", "Failed to process audio content!")
+                return
+            result = generate_mail(email_received=content, provider=self.selected_provider, i_want_to_respond=text)
+            if result is None:
+                messagebox.showerror("Error", "Failed to generate email response!")
+                return
+            pyperclip.copy(result)
+            pyautogui.hotkey("ctrl", "v")
+
+        else:
+            # Open manual input window
+            self.open_manual_input_window()
+            return
+
             
     def start_overlay(self, icon=None, item=None):
         """Start the overlay application"""
         if self.user:
-            # Create a wrapper function that includes the provider
-            def audio_process_wrapper():
-                detect_audio_and_process(keys_to_press=[['ctrl', 'space']], provider=self.selected_provider)
-            
-            keyboard.add_hotkey(MAIN_HOTKEY, audio_process_wrapper)
             if self.main_window:
                 self.main_window.withdraw()
             self.launch_overlay_app()
@@ -141,25 +162,12 @@ class SystemTrayApp:
             root.destroy()
             self.user = None
             create_registration_window(self)
-
-        def start_app():
-            # Create a wrapper function that includes the provider
-            def audio_process_wrapper():
-                detect_audio_and_process(keys_to_press=[['ctrl', 'space']], provider=self.selected_provider)
             
-            keyboard.add_hotkey(MAIN_HOTKEY, audio_process_wrapper)
-            root.withdraw()
-            self.launch_overlay_app()
-
-        def test_clipboard_mode():
-            """Test the current clipboard mode"""
-            if self.clipboard_mode:
-                self.process_clipboard_content()
-            else:
-                self.open_manual_input_window()
+        keyboard.add_hotkey(MAIN_HOTKEY, self.handle_email)
 
         tk.Button(root, text="Minimize to Tray", command=self.minimize_to_tray).pack(pady=5)
-        tk.Button(root, text=f"Start App (shortcut is {MAIN_HOTKEY})", command=start_app).pack()
+        if DEFAULT_CLIPBOARD_MODE:
+            tk.Button(root, text=f"Start App (shortcut is {MAIN_HOTKEY})", command=self.handle_email).pack()
         # tk.Button(root, text="Test Email Processing", command=test_clipboard_mode).pack(pady=5)
         tk.Button(root, text="LLM Provider", command=self.show_provider_selection).pack(pady=5)
         tk.Button(root, text="Open Directory", command=self.open_directory_window).pack(pady=5)
@@ -239,23 +247,20 @@ class SystemTrayApp:
             with open(USER_DATA_FILE, 'w') as f:
                 json.dump(self.user, f, indent=2)
 
-    def process_clipboard_content(self):
-        """Process content from clipboard and generate email response"""
+    def copy_selected_content(self):
+        """Copy the content from clipboard and returns it"""
         try:
+            # pyautogui.hotkey("ctrl", "c")
             clipboard_content = pyperclip.paste()
             if not clipboard_content.strip():
                 messagebox.showwarning("Empty Clipboard", "No content found in clipboard!")
                 return
             
-            # Generate email response
-            response = generate_mail(clipboard_content, provider=self.selected_provider)
-            
-            # Copy result back to clipboard
-            pyperclip.copy(response)
-            messagebox.showinfo("Success", "Email response generated and copied to clipboard!")
+            return clipboard_content
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to process clipboard content: {str(e)}")
+            return None
 
     def open_manual_input_window(self):
         """Open a window for manual email input and processing"""
@@ -268,38 +273,36 @@ class SystemTrayApp:
         provider_frame = tk.Frame(input_window)
         provider_frame.pack(pady=10, fill=tk.X, padx=20)
         
-        tk.Label(provider_frame, text="LLM Provider:", font=("Arial", 10, "bold")).pack(anchor=tk.W)
-        
-        provider_var = tk.StringVar(value=self.selected_provider or "ollama")
-        provider_options = ["groq", "ollama", "anythingllm", "genie"]
-        
-        provider_dropdown = tk.Frame(provider_frame)
-        provider_dropdown.pack(fill=tk.X, pady=5)
-        
-        for i, provider in enumerate(provider_options):
-            if i % 2 == 0:
-                row_frame = tk.Frame(provider_dropdown)
-                row_frame.pack(fill=tk.X)
-            
-            tk.Radiobutton(
-                row_frame,
-                text=provider.capitalize(),
-                variable=provider_var,
-                value=provider
-            ).pack(side=tk.LEFT, padx=10)
-        
         # Input section
         tk.Label(input_window, text="Paste your email content here:", font=("Arial", 12)).pack(pady=10)
         
         input_text = tk.Text(input_window, width=60, height=8, wrap=tk.WORD)
         input_text.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
+
+        # Audio input section
+        audio_frame = tk.Frame(input_window)
+        audio_frame.pack(pady=10, fill=tk.X, padx=20)
+        tk.Label(audio_frame, text="Then audio record what you want to anwser to the person in your own terms:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+
+        recorded_text = tk.StringVar(value="")
+
+        def record_audio():
+            text = detect_audio_and_process(provider=self.selected_provider)
+            if text:
+                recorded_text.set(text)
+                messagebox.showinfo("Audio Recorded", "Audio input processed and ready to use.")
+            else:
+                messagebox.showwarning("Audio Error", "No audio input detected or processing failed.")
+
+        record_button = tk.Button(audio_frame, text="Record Audio", command=record_audio)
+        record_button.pack(side=tk.LEFT, padx=5)
         
         # Output section
         tk.Label(input_window, text="Generated response:", font=("Arial", 12)).pack(pady=(10,5))
         
         output_text = tk.Text(input_window, width=60, height=8, wrap=tk.WORD, state=tk.DISABLED)
         output_text.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
-        
+
         def process_input():
             content = input_text.get("1.0", tk.END).strip()
             if not content:
@@ -307,8 +310,7 @@ class SystemTrayApp:
                 return
             
             try:
-                selected_provider = provider_var.get()
-                response = generate_mail(content, provider=selected_provider)
+                response = generate_mail(email_received=content, provider=self.selected_provider, i_want_to_respond=recorded_text.get())
                 
                 # Display response
                 output_text.config(state=tk.NORMAL)

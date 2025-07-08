@@ -16,6 +16,8 @@ from config_settings import (
     TRAY_ICON_SIZE, TRAY_ICON_FALLBACK_SIZE, OVERLAY_COLOR, MAIN_HOTKEY,
     DEFAULT_CLIPBOARD_MODE
 )
+import string
+
 
 load_dotenv()
 
@@ -221,6 +223,10 @@ def generate_ollama(messages):
             raise
 
 def generate_genie(messages):
+    final_str = ''
+    for char in messages:
+        if char in string.printable:
+            final_str += char
     # Generate mail using Genie OpenAI-compatible API
     try:
         genie_config = config["providers"]["genie"]
@@ -234,7 +240,7 @@ def generate_genie(messages):
         # Make chat completion request
         completion = client.chat.completions.create(
             model=genie_config["model"],
-            messages=messages,
+            messages=final_str,
             temperature=genie_config["temperature"],
             max_tokens=genie_config["max_tokens"],
             top_p=genie_config["top_p"]

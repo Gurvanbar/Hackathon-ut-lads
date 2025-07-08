@@ -9,6 +9,8 @@
 
 <p>Voxmail AI lets you respond to emails in seconds, just copy the message, hit your keyboard shortcut, speak your reply, and instantly see a professionally written response. Powered by on-device voice recognition and natural language generation, Voxmail AI runs locally to protect your data and ensure full privacy compliance.
 
+---
+
 ## 🧠 Key Features
 
 - 🎤 **Voice-to-Email**: Speak naturally — Voxmail AI turns your voice into professionally formatted emails.

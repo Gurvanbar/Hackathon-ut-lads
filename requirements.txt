@@ -16,3 +16,4 @@ python-multipart
 openai
 pystray
 pyautogui
+faster-whisper

@@ -49,7 +49,7 @@
   },
   "mail_generation": {
     "default_provider": "ollama",
-    "system_prompt": "I'm {sender_name} and I'm a {sender_profession}. I received an email : {email_received}. Here is the list of recipients {recipients_text}. I want to respond : {i_want_to_respond} but make it professionnal."
+    "system_prompt": "I'm {sender_name} and I'm a {sender_profession}. I received an email : {email_received}. Here is the list of recipients {recipients_text}. I want to respond : {i_want_to_respond} but make it professionnal. Example of a professionnal looking email : Dear [Recipient’s name], \n[Your message content here]. \nBest regards, \n[Your full name]"
   },
   "user_data_file": "user_data.json",
   "keybindings": {

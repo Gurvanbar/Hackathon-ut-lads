@@ -16,7 +16,9 @@ from config_settings import (
     TRAY_ICON_SIZE, TRAY_ICON_FALLBACK_SIZE, OVERLAY_COLOR, MAIN_HOTKEY,
     DEFAULT_CLIPBOARD_MODE
 )
+import faster_whisper
 import string
+import copy
 
 
 load_dotenv()
@@ -41,7 +43,7 @@ def generate_mail(
     user_data_file = config["user_data_file"]
     with open(user_data_file, "r") as f:
         user_data = json.load(f)
-
+    recipients = None
     if provider == "groq":
         recipients = get_names_in_prompt(email_received, provider)
 
@@ -52,7 +54,9 @@ def generate_mail(
         recipients_text = "\n\nRecipient Info:\n"
         for person in recipients:
             recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
+    print(i_want_to_respond)
     system_prompt = config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond).replace("{recipients_text}", recipients_text)
+    print(system_prompt)
     if not recipients:
         system_prompt = system_prompt.replace("Here is the list of recipients {recipients_text}. ", "")
     messages = [
@@ -145,7 +149,7 @@ def get_names_in_prompt(prompt, provider=None):
         print(f"Error in get_names_in_prompt with provider '{provider}': {e}")
         return []
 
-def detect_audio_and_process(provider=None):
+def detect_audio_and_process(provider=None, stop_flag=None):
     keys_to_press = config["keybindings"]["recording_keys"]
     
     # Audio parameters from config
@@ -163,17 +167,36 @@ def detect_audio_and_process(provider=None):
     stream = sd.InputStream(samplerate=freq, channels=channels)
     stream.start()
 
-    # Continue recording while space is held
+    # Continue recording while space is held OR until stop_flag is set
     condition = True
     while condition:
-        for keys in keys_to_press:
-            if not keyboard.is_pressed(keys):
-                condition = False
-        audio_chunk, _ = stream.read(chunk_size)
-        all_chunks.append(audio_chunk)
+        # Check stop flag first
+        if stop_flag and stop_flag.is_set():
+            condition = False
+            break
+            
+        # Check keyboard keys only if no stop_flag or stop_flag is not set
+        if not stop_flag:
+            for keys in keys_to_press:
+                if not keyboard.is_pressed(keys):
+                    condition = False
+                    break
+        
+        if condition:
+            try:
+                audio_chunk, _ = stream.read(chunk_size)
+                all_chunks.append(audio_chunk)
+            except Exception as e:
+                print(f"Error reading audio: {e}")
+                break
 
     stream.stop()
     print("* Done recording")
+
+    # If no audio was recorded, return None
+    if not all_chunks:
+        print("No audio recorded")
+        return None
 
     # Concatenation des extraits audio avec numpy
     recording = np.concatenate(all_chunks, axis=0)
@@ -181,19 +204,32 @@ def detect_audio_and_process(provider=None):
     filename = os.path.dirname(__file__) + "/" + audio_config["output_file"]
     wv.write(filename, recording, freq, sampwidth=audio_config["sample_width"])
     
-    # Transcription with configured settings
-    transcription_config = config["transcription"]
-    client = Groq()
-    with open(filename, "rb") as file:
-        transcription = client.audio.transcriptions.create(
-            file=(filename, file.read()),
-            model=transcription_config["model"],
-            language=transcription_config["language"],
-            response_format=transcription_config["response_format"],
-        )
-    print(transcription.text)
-    return transcription.text
-
+    # Transcription based on provider
+    if provider == "groq":
+        # Use Groq API for transcription
+        transcription_config = config["transcription"]
+        client = Groq()
+        with open(filename, "rb") as file:
+            transcription = client.audio.transcriptions.create(
+                file=(filename, file.read()),
+                model=transcription_config["model"],
+                language=transcription_config["language"],
+                response_format=transcription_config["response_format"],
+            )
+        text = transcription.text
+    else:
+        # Use local quantized Whisper for other providers
+        print("Using local quantized Whisper for transcription...")
+        model = faster_whisper.WhisperModel("distil-small.en", compute_type="int8")
+        segments, info = model.transcribe(filename, language="en")
+        text = ""
+        for segment in segments:
+            print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+            text += segment.text + " "
+        text = text.strip()
+    
+    print("Transcription :", text)
+    return text
 
 
 
@@ -223,10 +259,14 @@ def generate_ollama(messages):
             raise
 
 def generate_genie(messages):
-    final_str = ''
-    for char in messages:
-        if char in string.printable:
-            final_str += char
+    # Optionally, remove non-ASCII characters from the content of each message
+    filtered_messages = [
+        {
+            "role": m["role"],
+            "content": ''.join([c for c in m["content"] if ord(c) < 128])
+        } for m in messages
+    ]
+
     # Generate mail using Genie OpenAI-compatible API
     try:
         genie_config = config["providers"]["genie"]
@@ -240,7 +280,7 @@ def generate_genie(messages):
         # Make chat completion request
         completion = client.chat.completions.create(
             model=genie_config["model"],
-            messages=final_str,
+            messages=filtered_messages,
             temperature=genie_config["temperature"],
             max_tokens=genie_config["max_tokens"],
             top_p=genie_config["top_p"]

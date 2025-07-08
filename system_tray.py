@@ -120,6 +120,7 @@ class SystemTrayApp:
         
     def run_tray(self):
         """Run the system tray icon"""
+        print("Starting system tray icon...")
         self.create_tray_icon()
         self.tray_icon.run()
 
@@ -267,7 +268,7 @@ class SystemTrayApp:
         """Open a window for manual email input and processing"""
         input_window = tk.Toplevel(self.main_window)
         input_window.title("Manual Email Input")
-        input_window.geometry("500x500")
+        input_window.geometry("600x800")
         input_window.attributes("-topmost", True)
         
         # Provider selection section
@@ -283,20 +284,66 @@ class SystemTrayApp:
         # Audio input section
         audio_frame = tk.Frame(input_window)
         audio_frame.pack(pady=10, fill=tk.X, padx=20)
-        tk.Label(audio_frame, text="Then audio record what you want to anwser to the person in your own terms:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+        tk.Label(audio_frame, text="Then audio record what you want to answer to the person in your own terms:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
 
         recorded_text = tk.StringVar(value="")
+        stop_flag = threading.Event()
+        recording_thread = None
 
-        def record_audio():
-            text = detect_audio_and_process(provider=self.selected_provider)
-            if text:
-                recorded_text.set(text)
-                messagebox.showinfo("Audio Recorded", "Audio input processed and ready to use.")
-            else:
-                messagebox.showwarning("Audio Error", "No audio input detected or processing failed.")
+        status_label = tk.Label(audio_frame, text="⏺️ Idle", font=("Arial", 12))
+        status_label.pack(side=tk.LEFT, padx=5)
 
-        record_button = tk.Button(audio_frame, text="Record Audio", command=record_audio)
+        def start_recording():
+            nonlocal recording_thread, stop_flag
+            
+            if recording_thread and recording_thread.is_alive():
+                return
+                
+            # Reset stop flag
+            stop_flag.clear()
+            
+            status_label.config(text="🎙️ Recording...")
+            record_button.config(state=tk.DISABLED)
+            stop_button.config(state=tk.NORMAL)
+            
+            def record():
+                try:
+                    text = detect_audio_and_process(provider=self.selected_provider, stop_flag=stop_flag)
+                    
+                    # Update UI in main thread
+                    def update_ui():
+                        recorded_text.set(text if text else "")
+                        status_label.config(text="✅ Done" if text else "⚠️ No input")
+                        record_button.config(state=tk.NORMAL)
+                        stop_button.config(state=tk.DISABLED)
+                    
+                    input_window.after(0, update_ui)
+                    
+                except Exception as e:
+                    def update_ui_error():
+                        status_label.config(text="❌ Error")
+                        record_button.config(state=tk.NORMAL)
+                        stop_button.config(state=tk.DISABLED)
+                        print(f"Recording error: {e}")
+                    
+                    input_window.after(0, update_ui_error)
+            
+            # Start recording in a thread
+            recording_thread = threading.Thread(target=record, daemon=True)
+            recording_thread.start()
+
+        def stop_recording():
+            nonlocal stop_flag
+            
+            if recording_thread and recording_thread.is_alive():
+                stop_flag.set()
+                status_label.config(text="⏹️ Stopping...")
+                stop_button.config(state=tk.DISABLED)
+
+        record_button = tk.Button(audio_frame, text="Record Audio", command=start_recording)
         record_button.pack(side=tk.LEFT, padx=5)
+        stop_button = tk.Button(audio_frame, text="Stop", command=stop_recording, state=tk.DISABLED)
+        stop_button.pack(side=tk.LEFT, padx=5)
         
         # Output section
         tk.Label(input_window, text="Generated response:", font=("Arial", 12)).pack(pady=(10,5))
@@ -330,13 +377,22 @@ class SystemTrayApp:
             else:
                 messagebox.showwarning("No Response", "No response to copy!")
         
+        # Cleanup function for window close
+        def on_window_close():
+            if recording_thread and recording_thread.is_alive():
+                stop_flag.set()
+            input_window.destroy()
+        
+        input_window.protocol("WM_DELETE_WINDOW", on_window_close)
+        
         # Buttons
         button_frame = tk.Frame(input_window)
         button_frame.pack(pady=10)
         
         tk.Button(button_frame, text="Generate Response", command=process_input).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame, text="Copy Response", command=copy_response).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Close", command=input_window.destroy).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Close", command=on_window_close).pack(side=tk.LEFT, padx=5)
+
 
 # Create the app instance for import
 app = SystemTrayApp()

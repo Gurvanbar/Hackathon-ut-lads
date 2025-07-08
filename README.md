@@ -40,5 +40,16 @@ Fill up the `config.json` and the `config_settings.py`
 python main.py
 ```
 
+# Genie
 Note that you have to add the 3 .bin files (the model) for the genie LLM provider from : `https://huggingface.co/Volko76/Llama-3.2-3B-Genie-Compatible-QNN-Binaries/tree/main/genie_bundle`
 
+# AnythingLLM
+https://anythingllm.com/desktop download it and setup a developer key
+
+# Groq
+Get an api key and add it to the config
+
+# Ollama
+Install Ollama
+
+Please note that we will download models if they are not already there so your first requests can be slow

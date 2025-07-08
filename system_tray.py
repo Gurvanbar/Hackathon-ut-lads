@@ -179,40 +179,41 @@ class SystemTrayApp:
     def launch_overlay_app(self):
         """Launch the overlay application"""
         self.overlay_window = launch_overlay_app(self)
-        
     def show_provider_selection(self, icon=None, item=None):
         """Show a window to select LLM provider"""
-        provider_window = tk.Tk()
+        provider_window = tk.Toplevel(self.main_window if self.main_window else None)
         provider_window.title("Select LLM Provider")
         provider_window.geometry("500x450")
         provider_window.attributes("-topmost", True)
-        
+
         tk.Label(provider_window, text="Choose your LLM Provider:", font=("Arial", 14, "bold")).pack(pady=20)
-        
+
         # Load current selection
         current_provider = self.selected_provider or "ollama"
         provider_var = tk.StringVar(value=current_provider)
-        
+
         providers = [
             ("Groq (Online, Best)", "groq"),
-            ("Ollama (CPU/GPU, 3rd party, Local)", "ollama"), 
+            ("Ollama (CPU/GPU, 3rd party, Local)", "ollama"),
             ("AnythingLLM (NPU, 3rd party, Local)", "anythingllm"),
             ("Genie (NPU, Qualcomm, Slow, Local)", "genie")
         ]
-        
+
         for display_name, provider_id in providers:
             tk.Radiobutton(
                 provider_window,
                 text=display_name,
                 variable=provider_var,
                 value=provider_id,
-                font=("Arial", 12)
-            ).pack(pady=5, anchor=tk.W, padx=50)
-        
+                font=("Arial", 12),
+                anchor="w",
+                padx=50
+            ).pack(pady=5, anchor=tk.W)
+
         def apply_selection():
             self.selected_provider = provider_var.get()
             self.save_user_preferences()
-            tk.messagebox.showinfo("Success", f"Provider set to: {provider_var.get().capitalize()}")
+            messagebox.showinfo("Success", f"Provider set to: {provider_var.get().capitalize()}")
             provider_window.destroy()
         
         button_frame = tk.Frame(provider_window)

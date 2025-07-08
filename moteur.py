@@ -11,6 +11,11 @@ import keyboard
 import pyperclip
 from openai import OpenAI
 from typing import Literal
+from config_settings import (
+    USER_DATA_FILE, ICON_FILE, APP_NAME, MAIN_WINDOW_SIZE,
+    TRAY_ICON_SIZE, TRAY_ICON_FALLBACK_SIZE, OVERLAY_COLOR, MAIN_HOTKEY,
+    DEFAULT_CLIPBOARD_MODE
+)
 
 load_dotenv()
 
@@ -24,6 +29,7 @@ config = load_config()
 def generate_mail(
     email_received: str,
     i_want_to_respond: str,
+    recipients: list = None,
     provider: Literal["groq", "ollama", "anythingllm", "genie"] = None
 ):
     # Use default provider from config if none specified
@@ -37,11 +43,16 @@ def generate_mail(
 
     sender_name = user_data.get("name", "Your Name")
     sender_profession = user_data.get("function", "Your Profession")
+    recipients_text = ""
+    if recipients:
+        recipients_text = "\n\nRecipient Info:\n"
+        for person in recipients:
+            recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
 
     messages = [
         {
             "role": "system",
-            "content": config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond)
+            "content": config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond).replace("{recipients_text}", recipients_text)
         },
         {
             "role": "user",
@@ -66,6 +77,59 @@ def generate_mail(
         return parsed.get("mail", result)
     except json.JSONDecodeError:
         return result
+    
+def get_names_in_prompt(prompt, provider=None):
+    # Use default provider from config if not explicitly given
+    if provider is None:
+        provider = config["mail_generation"]["default_provider"]
+
+    system_prompt = (
+        "Extract and return only the list of names of all people mentioned in the following prompt, "
+        "specifically those to whom the message is addressed. "
+        "Return a JSON array of names, e.g.: [\"Alice\", \"Bob\"]. No explanations."
+    )
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt
+        },
+        {
+            "role": "user",
+            "content": f"Prompt: {prompt}"
+        }
+    ]
+
+    try:
+        if provider == "groq":
+            result = generate_groq(messages)
+
+        elif provider == "ollama":
+            result = generate_ollama(messages)
+
+        elif provider == "anythingllm":
+            result = generate_anythingllm(messages)
+
+        elif provider == "genie":
+            result = generate_genie(messages)
+
+        else:
+            print(f"Unsupported provider: {provider}")
+            return []
+
+        # Attempt to parse the result as JSON
+        try:
+            names = json.loads(result)
+            if isinstance(names, list):
+                return names
+            else:
+                return names['names']
+        except json.JSONDecodeError:
+            return [result]
+
+    except Exception as e:
+        print(f"Error in get_names_in_prompt with provider '{provider}': {e}")
+        return []
 
 def detect_audio_and_process(provider=None):
     keys_to_press = config["keybindings"]["recording_keys"]

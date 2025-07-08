@@ -16,7 +16,8 @@
 - 🎤 **Voice-to-Email**: Speak naturally — Voxmail AI turns your voice into professionally formatted emails.
 - 🔒 **Local Processing**: All data stays on your device — no cloud transmission. Perfect for regulated industries.
 - 🌐 **Multilingual Support**: Compose emails in multiple languages with automatic tone matching.
-- 📥 **Email Integration**: Compatible with email services.
+- 📥 **Email Integration**: Compatible any with email services.
+- 💁‍♂️ **Contact Framework**: The AI recognize who it is talking to (your boss, a friend etc).
 
 ---
 

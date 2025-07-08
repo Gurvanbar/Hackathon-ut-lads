@@ -1,7 +1,7 @@
 # Voxmail AI
 
 > From voice to email instantly :🎙️ Speak. ✉️ Send. ✅ Done.  
-**Voxmail AI** is a locally-running voice-powered assistant that helps professionals write clear, personalized, and secure emails — just by talking.
+**Voxmail AI** is a locally-running voice-powered assistant that helps professionals write clear, personalized, and secure emails, just by talking.
 
 ---
 

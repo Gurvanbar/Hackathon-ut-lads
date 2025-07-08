@@ -7,7 +7,7 @@ A desktop application for anwering emails at ultra speed.
 
 import threading
 from system_tray import app
-from user_management import load_user_data
+from user_management import load_user_data, create_registration_window
 from utils import setup_application
 
 def main():
@@ -28,7 +28,7 @@ def main():
     
     # Show the main window or registration window initially
     if app.user is None:
-        app.create_registration_window()
+        create_registration_window(app)
     else:
         app.show_main_window()
 

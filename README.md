@@ -29,6 +29,15 @@
 
 ---
 
+## 🚀 Future
+
+- **Visual**: Vision recognition to automatically detect the mail and the sender
+- **Improved performance**: Improve the Genie backend server
+- **UI**: Going to PyQt instead of Tkinter and setup a graphic chart
+- **Models**: More models to come
+
+---
+
 ## 📦 Installation
 
 ```bash
@@ -43,6 +52,9 @@ python main.py
 
 # Genie
 Note that you have to add the 3 .bin files (the model) for the genie LLM provider from : `https://huggingface.co/Volko76/Llama-3.2-3B-Genie-Compatible-QNN-Binaries/tree/main/genie_bundle`
+Launch the server so make genie a openai compatible server
+![image](https://github.com/user-attachments/assets/6f5a70b3-d1c9-491a-a851-868a21c8d6ef)
+
 
 # AnythingLLM
 https://anythingllm.com/desktop download it and setup a developer key

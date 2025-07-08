@@ -31,7 +31,14 @@
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/your-org/voxmail-ai.git
-cd voxmail-ai
-npm install
-npm run dev
+git clone https://github.com/Gurvanbar/Hackathon-ut-lads.git
+cd Hackathon-ut-lads
+pip install -r requirements.txt
+```
+Fill up the `config.json` and the `config_settings.py`
+```bash
+python main.py
+```
+
+Note that you have to add the 3 .bin files (the model) for the genie LLM provider from : `https://huggingface.co/Volko76/Llama-3.2-3B-Genie-Compatible-QNN-Binaries/tree/main/genie_bundle`
+

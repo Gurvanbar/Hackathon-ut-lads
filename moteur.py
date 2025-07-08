@@ -60,6 +60,8 @@ def generate_mail(
         }
     ]
 
+    print(messages)
+
     if provider == "groq":
         result = generate_groq(messages)
     elif provider == "ollama":

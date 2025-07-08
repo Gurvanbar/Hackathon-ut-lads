@@ -16,7 +16,7 @@ def main():
     setup_application()
     
     # Load user data on startup
-    app.user = load_user_data()
+    app.user = load_user_data(app)
     
     # Load user preferences if user exists
     if app.user:

@@ -90,6 +90,12 @@ Voxmail AI offers two ways to interact:
 
 ---
 
+🖥️ System Tray Integration
+
+To keep your workspace uncluttered, Voxmail AI can be minimized to the system tray, ensuring it doesn't take up valuable screen space. We recommend enabling this feature for a seamless experience. Additionally, you can activate an overlay directly from the system tray, providing a convenient button to trigger the application instantly without navigating through menus.
+
+---
+
 ## 🛠️ Configuration
 
 - **config.json**: Set API keys, model preferences, and other settings.

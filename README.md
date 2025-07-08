@@ -22,9 +22,9 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Tkinter
-- **Voice Recognition**: Whisper.cpp
-- **Text Generation**: On-device LLM (Llama 3.2)
+- **Frontend**: Tkinter (to change in the future)
+- **Voice Recognition**: faster-whisper
+- **Text Generation**: On-device LLM (Llama 3.2) on the NPU, CPU, or GPU, or online with Groq
 
 ---
 

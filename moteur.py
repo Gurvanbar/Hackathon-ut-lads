@@ -1,7 +1,6 @@
 import ollama
 import os
 from dotenv import load_dotenv
-import sounddevice as sd
 # from scipy.io.wavfile import write
 import wavio as wv
 from groq import Groq
@@ -22,14 +21,110 @@ def load_config():
 config = load_config() 
 
 def generate_mail(
-    email_received: str,
-    i_want_to_respond: str,
-    provider: Literal["groq", "ollama", "anythingllm", "genie"] = None
+    content: str,
+    provider: Literal["groq", "ollama", "anythingllm", "genie"] = None,
+    recipients: list = None
 ):
     # Use default provider from config if none specified
     if provider is None:
         provider = config["mail_generation"]["default_provider"]
     
+def get_names_in_prompt(prompt, provider=None):
+    # Use default provider from config if not explicitly given
+    if provider is None:
+        provider = config["mail_generation"]["default_provider"]
+
+    system_prompt = (
+        "Extract and return only the list of names of all people mentioned in the following prompt, "
+        "specifically those to whom the message is addressed. "
+        "Return a JSON array of names, e.g.: [\"Alice\", \"Bob\"]. No explanations."
+    )
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt
+        },
+        {
+            "role": "user",
+            "content": f"Prompt: {prompt}"
+        }
+    ]
+
+    try:
+        if provider == "groq":
+            groq_config = config["providers"]["groq"]
+            client = Groq()
+            completion = client.chat.completions.create(
+                model=groq_config["model"],
+                messages=messages,
+                temperature=groq_config["temperature"],
+                max_completion_tokens=groq_config["max_completion_tokens"],
+                top_p=groq_config["top_p"],
+                stream=groq_config["stream"],
+                response_format=groq_config["response_format"],
+                stop=groq_config["stop"],
+            )
+            result = completion.choices[0].message.content.strip()
+
+        elif provider == "ollama":
+            ollama_config = config["providers"]["ollama"]
+            response = ollama.chat(
+                model=ollama_config["model"],
+                messages=messages,
+                options=ollama_config["options"]
+            )
+            result = response["message"]["content"].strip()
+
+        elif provider == "anythingllm":
+            anythingllm_config = config["providers"]["anythingllm"]
+            client = OpenAI(
+                base_url=anythingllm_config["base_url"],
+                api_key=anythingllm_config["api_key"]
+            )
+            completion = client.chat.completions.create(
+                model=anythingllm_config["model"],
+                messages=messages,
+                temperature=anythingllm_config["temperature"],
+                max_tokens=anythingllm_config["max_tokens"],
+                top_p=anythingllm_config["top_p"]
+            )
+            result = completion.choices[0].message.content.strip()
+
+        elif provider == "genie":
+            genie_config = config["providers"]["genie"]
+            client = OpenAI(
+                base_url=genie_config["base_url"],
+                api_key=genie_config["api_key"]
+            )
+            completion = client.chat.completions.create(
+                model=genie_config["model"],
+                messages=messages,
+                temperature=genie_config["temperature"],
+                max_tokens=genie_config["max_tokens"],
+                top_p=genie_config["top_p"]
+            )
+            result = completion.choices[0].message.content.strip()
+
+        else:
+            print(f"Unsupported provider: {provider}")
+            return []
+
+        # Attempt to parse the result as JSON
+        try:
+            names = json.loads(result)
+            if isinstance(names, list):
+                return names
+            else:
+                return names['names']
+        except json.JSONDecodeError:
+            return [result]
+
+    except Exception as e:
+        print(f"Error in get_names_in_prompt with provider '{provider}': {e}")
+        return []
+
+def generate_mail(content, provider = None, recipients = None):
     # Load sender info from user_data.json
     user_data_file = config["user_data_file"]
     with open(user_data_file, "r") as f:
@@ -38,16 +133,29 @@ def generate_mail(
     sender_name = user_data.get("name", "Your Name")
     sender_profession = user_data.get("function", "Your Profession")
 
+    recipients_text = ""
+    if recipients:
+        recipients_text = "\n\nRecipient Info:\n"
+        for person in recipients:
+            recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
+
+
     messages = [
         {
             "role": "system",
-            "content": config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond)
+            "content": config["mail_generation"]["system_prompt"]
         },
         {
             "role": "user",
-            "content": "Just answer the mail in JSON with the format: { \"mail\": \"This is a mail\" }"
+            "content": (
+                f"{content}\n"
+                f"user_name: {sender_name}\n"
+                f"user_profession: {sender_profession}"
+                f"{recipients_text}"
+            )
         }
     ]
+
 
     if provider == "groq":
         result = generate_groq(messages)
@@ -67,54 +175,6 @@ def generate_mail(
     except json.JSONDecodeError:
         return result
 
-def detect_audio_and_process(provider=None):
-    keys_to_press = config["keybindings"]["recording_keys"]
-    
-    # Audio parameters from config
-    audio_config = config["audio"]
-    freq = audio_config["frequency"]
-    channels = audio_config["channels"]
-    chunk_duration = audio_config["chunk_duration"]
-    chunk_size = int(freq * chunk_duration)
-
-    print("Press and hold the spacebar to start recording...")
-
-    all_chunks = []
-
-    # Start stream
-    stream = sd.InputStream(samplerate=freq, channels=channels)
-    stream.start()
-
-    # Continue recording while space is held
-    condition = True
-    while condition:
-        for keys in keys_to_press:
-            if not keyboard.is_pressed(keys):
-                condition = False
-        audio_chunk, _ = stream.read(chunk_size)
-        all_chunks.append(audio_chunk)
-
-    stream.stop()
-    print("* Done recording")
-
-    # Concatenation des extraits audio avec numpy
-    recording = np.concatenate(all_chunks, axis=0)
-
-    filename = os.path.dirname(__file__) + "/" + audio_config["output_file"]
-    wv.write(filename, recording, freq, sampwidth=audio_config["sample_width"])
-    
-    # Transcription with configured settings
-    transcription_config = config["transcription"]
-    client = Groq()
-    with open(filename, "rb") as file:
-        transcription = client.audio.transcriptions.create(
-            file=(filename, file.read()),
-            model=transcription_config["model"],
-            language=transcription_config["language"],
-            response_format=transcription_config["response_format"],
-        )
-    print(transcription.text)
-    return transcription.text
 
 
 

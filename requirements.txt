@@ -15,4 +15,4 @@ pydantic
 python-multipart
 openai
 pystray
-pyautogui
+Levenshtein

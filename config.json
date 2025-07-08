@@ -49,7 +49,7 @@
   },
   "mail_generation": {
     "default_provider": "ollama",
-    "system_prompt": "I'm {sender_name} and I'm a {sender_profession}. I received an email : {email_received}. I want to respond : {i_want_to_respond} but make it professionnal."
+    "system_prompt": "Create a single professional looking mail for the user that will be sent to all the recipients. It must be as versatile as possible, don't split the mail. Just answer the mail in JSON with the format: { \"mail\": \"This is a mail\" }"
   },
   "user_data_file": "user_data.json",
   "keybindings": {

@@ -29,7 +29,6 @@ config = load_config()
 def generate_mail(
     email_received: str,
     i_want_to_respond: str,
-    recipients: list = None,
     provider: Literal["groq", "ollama", "anythingllm", "genie"] = None
 ):
     # Use default provider from config if none specified
@@ -41,6 +40,9 @@ def generate_mail(
     with open(user_data_file, "r") as f:
         user_data = json.load(f)
 
+    if provider == "groq":
+        recipients = get_names_in_prompt(email_received, provider)
+
     sender_name = user_data.get("name", "Your Name")
     sender_profession = user_data.get("function", "Your Profession")
     recipients_text = ""
@@ -48,11 +50,13 @@ def generate_mail(
         recipients_text = "\n\nRecipient Info:\n"
         for person in recipients:
             recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
-
+    system_prompt = config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond).replace("{recipients_text}", recipients_text)
+    if not recipients:
+        system_prompt = system_prompt.replace("Here is the list of recipients {recipients_text}. ", "")
     messages = [
         {
             "role": "system",
-            "content": config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond).replace("{recipients_text}", recipients_text)
+            "content": system_prompt
         },
         {
             "role": "user",
@@ -78,7 +82,13 @@ def generate_mail(
         parsed = json.loads(result)
         return parsed.get("mail", result)
     except json.JSONDecodeError:
-        return result
+        # retry if the result is not valid JSON
+        print(f"Failed to parse JSON from {provider}. Retrying ...")
+        return generate_mail(
+            email_received,
+            i_want_to_respond,
+            provider=provider
+        )
     
 def get_names_in_prompt(prompt, provider=None):
     # Use default provider from config if not explicitly given
@@ -215,6 +225,7 @@ def generate_genie(messages):
     try:
         genie_config = config["providers"]["genie"]
         # Initialize OpenAI client with custom base URL for Genie
+        print(genie_config["base_url"], genie_config["api_key"])
         client = OpenAI(
             base_url=genie_config["base_url"],
             api_key=genie_config["api_key"]

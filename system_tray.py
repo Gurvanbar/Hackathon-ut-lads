@@ -268,7 +268,7 @@ class SystemTrayApp:
         """Open a window for manual email input and processing"""
         input_window = tk.Toplevel(self.main_window)
         input_window.title("Manual Email Input")
-        input_window.geometry("600x800")
+        input_window.geometry("800x800")
         input_window.attributes("-topmost", True)
         
         # Provider selection section

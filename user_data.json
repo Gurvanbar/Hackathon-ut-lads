@@ -1,6 +1,6 @@
 {
   "name": "Marin LUET",
   "function": "Software Engineer",
-  "clipboard_mode": true,
-  "selected_provider": "anythingllm"
+  "clipboard_mode": false,
+  "selected_provider": "groq"
 }

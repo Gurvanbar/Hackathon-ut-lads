@@ -20,6 +20,9 @@ import faster_whisper
 import string
 import copy
 
+from directory import load_directory
+from user_management import resolve_unknown_name
+
 
 load_dotenv()
 
@@ -44,16 +47,21 @@ def generate_mail(
     with open(user_data_file, "r") as f:
         user_data = json.load(f)
     recipients = None
-    if provider == "groq":
+    recipients_text = ""
+    if provider != "genie":
         recipients = get_names_in_prompt(email_received, provider)
-
+        if recipients:
+            directory = load_directory()
+            recipients_text = "\n\nRecipient Info:\n"
+            # for person in recipients:
+                # if not person.lower() in str(directory).lower():
+                #     resolve_unknown_name(person["name"], directory)
+                # recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
+            recipients_text += str(recipients)
+            
     sender_name = user_data.get("name", "Your Name")
     sender_profession = user_data.get("function", "Your Profession")
-    recipients_text = ""
-    if recipients:
-        recipients_text = "\n\nRecipient Info:\n"
-        for person in recipients:
-            recipients_text += f"- {person['name']} – {person['position']}: {person['description']}\n"
+    
     print(i_want_to_respond)
     system_prompt = config["mail_generation"]["system_prompt"].replace("{sender_name}", sender_name).replace("{sender_profession}", sender_profession).replace("{email_received}", email_received).replace("{i_want_to_respond}", i_want_to_respond).replace("{recipients_text}", recipients_text)
     print(system_prompt)
@@ -103,7 +111,6 @@ def get_names_in_prompt(prompt, provider=None):
 
     system_prompt = (
         "Extract and return only the list of names of all people mentioned in the following prompt, "
-        "specifically those to whom the message is addressed. "
         "Return a JSON array of names, e.g.: [\"Alice\", \"Bob\"]. No explanations."
     )
 
@@ -117,6 +124,8 @@ def get_names_in_prompt(prompt, provider=None):
             "content": f"Prompt: {prompt}"
         }
     ]
+
+    print(messages)
 
     try:
         if provider == "groq":
@@ -137,10 +146,14 @@ def get_names_in_prompt(prompt, provider=None):
 
         # Attempt to parse the result as JSON
         try:
+            print(f"Result from {provider}: {result}")
             names = json.loads(result)
             if isinstance(names, list):
+                print(names)
                 return names
             else:
+                print(names['names'])
+                print(names)
                 return names['names']
         except json.JSONDecodeError:
             return [result]

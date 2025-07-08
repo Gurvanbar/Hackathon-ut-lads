@@ -4,11 +4,13 @@ import tkinter as tk
 from tkinter import messagebox
 from config_settings import USER_DATA_FILE, REGISTRATION_WINDOW_SIZE
 
-def load_user_data():
+def load_user_data(app):
     """Load user data from file"""
     if os.path.exists(USER_DATA_FILE):
         with open(USER_DATA_FILE, "r") as file:
             return json.load(file)
+    else:
+        create_registration_window(app)
     return None
 
 def save_user_data(name, function):

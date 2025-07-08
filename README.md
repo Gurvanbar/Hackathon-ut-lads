@@ -3,19 +3,19 @@
 ![Voxmail AI Logo](https://github.com/user-attachments/assets/ea88e707-0099-4823-b05f-8b4ac75fe75a)
 
 > **Speak. Send. Done.**  
-**Voxmail AI** is a privacy-first, voice-powered assistant that transforms spoken words into professional, personalized emails in seconds. Designed for professionals, it runs locally to ensure data security and compliance.
+**Voxmail AI** is a productivity-first, voice-powered assistant that transforms spoken words into professional or friendly, personalized emails in seconds. It runs locally to ensure data security and compliance.
 
 ---
 
 ## 🚀 Overview
 
-Voxmail AI streamlines email communication by allowing you to respond to emails effortlessly. Simply copy an email, trigger the app with a keyboard shortcut, speak your reply, and Voxmail AI generates a polished, ready-to-send email. Powered by on-device voice recognition and advanced language models, it prioritizes speed, privacy, and ease of use.
+Voxmail AI streamlines email communication by allowing you to respond to emails effortlessly. Simply copy an email, trigger the app with a keyboard shortcut, speak your reply, and Voxmail AI generates a polished, ready-to-send email. Powered by on-device voice recognition (whisper) and on device Large Language Models (Llama), it prioritizes speed, privacy, and ease of use.
 
 ---
 
 ## 🎯 Key Features
 
-- **🎤 Voice-to-Email**: Convert natural speech into professionally formatted emails.
+- **🎤 Voice-to-Email**: Convert natural speech into professionally or friendly formatted emails.
 - **🔒 Local Processing**: All data stays on your device, ensuring privacy and compliance with regulated industries.
 - **🌐 Multilingual Support**: Compose emails in multiple languages with context-aware tone matching.
 - **📥 Broad Compatibility**: Seamlessly integrates with any email service.
@@ -27,7 +27,7 @@ Voxmail AI streamlines email communication by allowing you to respond to emails 
 
 Voxmail AI offers two ways to interact:
 
-- **Keyboard Shortcuts (Recommended)**: Enable "Auto-read from clipboard" in the config to use the default shortcut (`Ctrl + Space`, customizable). Copy an email to your clipboard, trigger the shortcut, speak your response, and Voxmail AI will:
+- **Keyboard Shortcuts (Recommended for productivity)**: Enable "Auto-read from clipboard" in the config to use the default shortcut (`Ctrl + Space`, customizable). Copy an email to your clipboard, trigger the shortcut, speak your response, and Voxmail AI will:
   1. Transcribe your audio.
   2. Identify the sender and prompt to add them to your contact directory if new.
   3. Generate a professional email and paste it at your cursor.
@@ -101,7 +101,7 @@ Voxmail AI offers two ways to interact:
 ## 📝 Notes
 
 - Ensure sufficient disk space for model downloads.
-- For optimal performance, use a device with a dedicated NPU or GPU.
+- For optimal performance, use a device with a dedicated NPU or GPU. We recommend the Qualcomm Snapdragon X Elite with his powerfull Hexagon NPU.
 - Check the [GitHub repository](https://github.com/Gurvanbar/Hackathon-ut-lads) for updates and community contributions.
 
 ---

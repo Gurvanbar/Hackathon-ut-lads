@@ -17,7 +17,7 @@ Voxmail AI lets you respond to emails in seconds, just copy the message, hit you
 
 To make it easy to use for anyone, we have created a GUI that you can enable by unckecking "Auto-read from clipboard". However, we very much recommand to use it though keyboard shortcuts (by enabling auto-read). 
 The keyboard shortcut to enable it is by default "ctrl space" but you can change this in the config file.
-It will read the content of you clipboard, 
+It will read the content of you clipboard (you should have copy the email you want to anwser to), record what you say (you say what you want to anwser to the email), transcribe you audio, detect who send the email, if he is not part of the directory offers you to add it to the directory to know the relationship you have with him, then ask an AI to write the email and it will paste it directetly on your cursor 
 
 ---
 
